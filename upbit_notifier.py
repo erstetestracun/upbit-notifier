@@ -4,7 +4,7 @@ import time
 import os
 
 URL = "https://upbit.com/service_center/notice"
-CHECK_INTERVAL = 1  # seconds
+CHECK_INTERVAL = 5  # seconds
 
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')  # load from Render env var
 CHAT_ID = os.getenv('CHAT_ID')
