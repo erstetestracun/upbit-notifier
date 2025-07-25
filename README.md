@@ -1,0 +1,2 @@
+# upbit-notifier
+New listings
