@@ -5,7 +5,7 @@ import os
 
 # Configuration
 URL = "https://upbit.com/service_center/notice"
-CHECK_INTERVAL = 10  # seconds
+CHECK_INTERVAL = 1  # seconds
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 
@@ -23,6 +23,8 @@ def get_trade_notices():
     response = requests.get(URL, headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
     titles = soup.select('.list-item__title')
+
+    log(f"🔍 Found {len(titles)} titles on the page.")
 
     trade_notices = []
     for tag in titles:
