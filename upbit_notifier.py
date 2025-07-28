@@ -9,22 +9,18 @@ CHECK_INTERVAL = 10  # seconds
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 
-latest_notice_id = None
+# Store all notified titles here
+notified_titles = set()
 
-def get_latest_notice():
+def get_latest_notices():
     headers = {
         'User-Agent': 'Mozilla/5.0'
     }
     response = requests.get(URL, headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
-    notice = soup.select_one('.list-item__title a')
-    
-    if notice:
-        title = notice.text.strip()
-        link = "https://upbit.com" + notice.get("href")
-        notice_id = link.split("id=")[-1]  # extract ID from URL
-        return notice_id, title, link
-    return None, None, None
+    # Select all notice titles on the page (assuming .list-item__title selects each title)
+    titles = [tag.text.strip() for tag in soup.select('.list-item__title')]
+    return titles
 
 def send_telegram_message(text):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -35,18 +31,31 @@ def send_telegram_message(text):
     }
     requests.post(url, data=payload)
 
+def log(msg):
+    timestamp = time.strftime("[%Y-%m-%d %H:%M:%S]")
+    print(f"{timestamp} {msg}")
+
 while True:
     try:
-        notice_id, title, link = get_latest_notice()
-        if notice_id and notice_id != latest_notice_id:
-            if "[거래]" in title:
-                latest_notice_id = notice_id
-                message = f"🚨 <b>New TRADE Notice</b>:\n\n<b>{title}</b>\n\n🔗 {link}"
-                send_telegram_message(message)
-                print("✅ Sent:", title)
-            else:
-                print("ℹ️ Skipped (not 거래):", title)
+        latest_notices = get_latest_notices()
+        new_trade_notices = []
+
+        for title in latest_notices:
+            # Check if title is trade-related AND not notified before
+            if (("[거래]" in title) or ("[Trade]" in title)) and (title not in notified_titles):
+                new_trade_notices.append(title)
+
+        # Send Telegram message for each new trade notice
+        for title in reversed(new_trade_notices):  # reversed = oldest first
+            message = f"🚨 New TRADE Notice:\n\n<b>{title}</b>\n\n🔗 {URL}"
+            send_telegram_message(message)
+            log(f"✅ Trade alert sent: {title}")
+            notified_titles.add(title)
+
+        if not new_trade_notices:
+            log("ℹ️ No new trade notices found")
+
     except Exception as e:
-        print("❌ Error:", e)
+        log(f"❌ Error: {e}")
 
     time.sleep(CHECK_INTERVAL)
