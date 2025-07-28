@@ -1,5 +1,3 @@
-print("=== upbit_notifier.py started ===")
-
 import time
 
 while True:
