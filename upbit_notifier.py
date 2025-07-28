@@ -21,6 +21,11 @@ def get_trade_notices():
         'Accept-Language': 'ko-KR,ko;q=0.9'  # Ensure page loads in Korean
     }
     response = requests.get(URL, headers=headers)
+
+    # ✅ Debug: print first 500 characters of the raw HTML page
+    print("🔍 First 500 chars of HTML page:")
+    print(response.text[:500])
+    
     soup = BeautifulSoup(response.text, 'html.parser')
     titles = soup.select('.list-item__title')
 
